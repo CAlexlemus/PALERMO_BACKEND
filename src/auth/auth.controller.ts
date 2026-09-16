@@ -1,13 +1,25 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Cuadrilla, Rol, Turno } from '../entities';
 import { AuthService } from './auth.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { LoginDto } from './dto/login.dto';
@@ -37,10 +49,67 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Get('usuarios')
+  @ApiOperation({
+    summary: 'Listar usuarios',
+    description: 'Devuelve todos los usuarios registrados (sin hash de contraseña).',
+  })
+  @ApiOkResponse({
+    description: 'Listado de usuarios',
+    type: UsuarioPublicoDto,
+    isArray: true,
+  })
+  findAllUsuarios() {
+    return this.authService.findAllUsuarios();
+  }
+
+  @Get('roles')
+  @ApiOperation({
+    summary: 'Listar roles',
+    description: 'Catálogo de roles disponibles para alta de usuarios.',
+  })
+  @ApiOkResponse({
+    description: 'Listado de roles',
+    type: Rol,
+    isArray: true,
+  })
+  findAllRoles() {
+    return this.authService.findAllRoles();
+  }
+
+  @Get('cuadrillas')
+  @ApiOperation({
+    summary: 'Listar cuadrillas',
+    description: 'Catálogo de cuadrillas disponibles para alta de usuarios.',
+  })
+  @ApiOkResponse({
+    description: 'Listado de cuadrillas',
+    type: Cuadrilla,
+    isArray: true,
+  })
+  findAllCuadrillas() {
+    return this.authService.findAllCuadrillas();
+  }
+
+  @Get('turnos')
+  @ApiOperation({
+    summary: 'Listar turnos',
+    description: 'Catálogo de turnos disponibles para alta de usuarios.',
+  })
+  @ApiOkResponse({
+    description: 'Listado de turnos',
+    type: Turno,
+    isArray: true,
+  })
+  findAllTurnos() {
+    return this.authService.findAllTurnos();
+  }
+
   @Post('usuarios')
   @ApiOperation({
     summary: 'Crear usuario',
-    description: 'Registra un nuevo usuario en el sistema.',
+    description:
+      'Registra un nuevo usuario. Requiere rol, cuadrilla y turno existentes.',
   })
   @ApiCreatedResponse({
     description: 'Usuario creado correctamente',
@@ -48,7 +117,22 @@ export class AuthController {
   })
   @ApiConflictResponse({ description: 'El nombre de usuario ya existe' })
   @ApiBadRequestResponse({ description: 'Datos de entrada inválidos' })
+  @ApiNotFoundResponse({
+    description: 'El rol, cuadrilla o turno indicado no existe',
+  })
   createUsuario(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.authService.createUsuario(createUsuarioDto);
+  }
+
+  @Delete('usuarios/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Dar de baja usuario',
+    description: 'Elimina un usuario del sistema por ID.',
+  })
+  @ApiOkResponse({ description: 'Usuario dado de baja' })
+  @ApiNotFoundResponse({ description: 'Usuario no encontrado' })
+  removeUsuario(@Param('id', ParseUUIDPipe) id: string) {
+    return this.authService.removeUsuario(id);
   }
 }

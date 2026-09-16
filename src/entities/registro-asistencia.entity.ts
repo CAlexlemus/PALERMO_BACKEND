@@ -39,14 +39,15 @@ export class RegistroAsistencia {
   @Column({ name: 'essincronizacionoffline', type: 'boolean', default: false })
   esSincronizacionOffline!: boolean;
 
-  @ApiProperty({ type: () => GeoPointDto })
+  @ApiPropertyOptional({ type: () => GeoPointDto, nullable: true })
   @Column({
     name: 'ubicacion',
     type: 'geography',
     spatialFeatureType: 'Point',
     srid: 4326,
+    nullable: true,
   })
-  ubicacion!: GeoPoint;
+  ubicacion!: GeoPoint | null;
 
   @ApiPropertyOptional({ example: '1200.00', nullable: true })
   @Column({

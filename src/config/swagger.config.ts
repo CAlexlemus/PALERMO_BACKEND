@@ -17,9 +17,11 @@ export function setupSwagger(app: INestApplication): void {
       'API del backend BEFCO para gestión de asistencia en obra, usuarios y catálogos.',
     )
     .setVersion('1.0')
+    .addBearerAuth()
     .addTag('App', 'Endpoints generales de la aplicación')
     .addTag('Auth', 'Autenticación, login y creación de usuarios')
     .addTag('Obras', 'Consulta, alta y baja lógica de obras y sus ubicaciones')
+    .addTag('Asistencias', 'Registro de entradas/salidas (requiere JWT)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {

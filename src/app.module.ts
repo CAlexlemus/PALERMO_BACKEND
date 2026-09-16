@@ -3,17 +3,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { appConfig, databaseConfig, validateEnv } from './config';
+import { appConfig, databaseConfig, jwtConfig, storageConfig, validateEnv } from './config';
 import { entities } from './entities';
+import { AsistenciasModule } from './asistencias/asistencias.module';
 import { AuthModule } from './auth/auth.module';
 import { ObrasModule } from './obras/obras.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig, jwtConfig, storageConfig],
       validate: validateEnv,
     }),
     TypeOrmModule.forRootAsync({
@@ -39,6 +41,8 @@ import { ObrasModule } from './obras/obras.module';
     }),
     AuthModule,
     ObrasModule,
+    AsistenciasModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

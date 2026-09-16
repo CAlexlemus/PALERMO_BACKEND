@@ -37,6 +37,12 @@ export class LoginResponseDto {
   @ApiProperty({ example: 'Inicio de sesión exitoso' })
   message!: string;
 
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'JWT Bearer token para endpoints protegidos',
+  })
+  accessToken!: string;
+
   @ApiProperty({ type: () => UsuarioPublicoDto })
   usuario!: UsuarioPublicoDto;
 }

@@ -1,2 +1,7 @@
-export { appConfig, databaseConfig } from './configuration';
+export {
+  appConfig,
+  databaseConfig,
+  jwtConfig,
+  storageConfig,
+} from './configuration';
 export { validateEnv } from './env.validation';

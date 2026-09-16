@@ -49,23 +49,19 @@ export class CreateUsuarioDto {
   @IsUUID()
   jefeId?: string | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 1,
-    description: 'ID de la cuadrilla',
-    nullable: true,
+    description: 'ID de la cuadrilla a la que pertenece',
   })
-  @IsOptional()
   @IsInt()
-  cuadrillaId?: number | null;
+  cuadrillaId!: number;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 1,
-    description: 'ID del turno',
-    nullable: true,
+    description: 'ID del turno asignado',
   })
-  @IsOptional()
   @IsInt()
-  turnoId?: number | null;
+  turnoId!: number;
 
   @ApiPropertyOptional({
     example: true,

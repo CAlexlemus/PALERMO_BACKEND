@@ -5,6 +5,7 @@ export function validateEnv(config: Record<string, unknown>) {
     'DB_USERNAME',
     'DB_PASSWORD',
     'DB_NAME',
+    'JWT_SECRET',
   ] as const;
 
   const missingKeys = requiredKeys.filter((key) => !config[key]);
@@ -23,6 +24,10 @@ export function validateEnv(config: Record<string, unknown>) {
   const appPort = Number(config.PORT ?? 3000);
   if (!Number.isInteger(appPort) || appPort <= 0) {
     throw new Error('PORT must be a positive integer');
+  }
+
+  if (typeof config.JWT_SECRET !== 'string' || config.JWT_SECRET.length < 16) {
+    throw new Error('JWT_SECRET must be a string with at least 16 characters');
   }
 
   return config;
