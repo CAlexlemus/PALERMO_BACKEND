@@ -3,7 +3,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { appConfig, databaseConfig, jwtConfig, storageConfig, validateEnv } from './config';
+import {
+  appConfig,
+  databaseConfig,
+  jwtConfig,
+  storageConfig,
+  validateEnv,
+} from './config';
 import { entities } from './entities';
 import { AsistenciasModule } from './asistencias/asistencias.module';
 import { AuthModule } from './auth/auth.module';
@@ -24,19 +30,33 @@ import { StorageModule } from './storage/storage.module';
       useFactory: (configService: ConfigService) => {
         const database = configService.get('database', { infer: true });
 
-        return {
+        const common = {
           type: 'postgres' as const,
-          host: database.host,
-          port: database.port,
-          username: database.username,
-          password: database.password,
-          database: database.database,
           entities,
           autoLoadEntities: true,
           synchronize: database.synchronize,
           logging: database.logging,
           retryAttempts: 10,
           retryDelay: 3000,
+        };
+
+        if (database.url) {
+          return {
+            ...common,
+            url: database.url,
+            ssl: needsDatabaseSsl(database.url)
+              ? { rejectUnauthorized: false }
+              : false,
+          };
+        }
+
+        return {
+          ...common,
+          host: database.host,
+          port: database.port,
+          username: database.username,
+          password: database.password,
+          database: database.database,
         };
       },
     }),
@@ -50,3 +70,20 @@ import { StorageModule } from './storage/storage.module';
   providers: [AppService],
 })
 export class AppModule {}
+
+/** La red privada de Railway y localhost no usan TLS. El proxy público sí. */
+function needsDatabaseSsl(databaseUrl: string): boolean {
+  let hostname: string;
+
+  try {
+    hostname = new URL(databaseUrl).hostname;
+  } catch {
+    return false;
+  }
+
+  return (
+    hostname !== 'localhost' &&
+    hostname !== '127.0.0.1' &&
+    !hostname.endsWith('railway.internal')
+  );
+}
