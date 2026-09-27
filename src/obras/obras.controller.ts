@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -20,6 +21,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Obra } from '../entities';
+import { ConsultarAsistenciasObraDto } from './dto/consultar-asistencias-obra.dto';
 import { CreateObraDto } from './dto/create-obra.dto';
 import { UpdateObraDto } from './dto/update-obra.dto';
 import { ObrasService } from './obras.service';
@@ -37,6 +39,23 @@ export class ObrasController {
   @ApiOkResponse({ description: 'Listado de obras vigentes', type: [Obra] })
   findAll() {
     return this.obrasService.findAllVigentes();
+  }
+
+  @Get(':id/asistencias')
+  @ApiOperation({
+    summary: 'Consultar registros de asistencia de una obra',
+    description:
+      'Devuelve nombre de usuario, obra, ubicación, tipo de evento, hora y fecha/hora servidor en un rango de fechas.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'ID de la obra' })
+  @ApiOkResponse({ description: 'Listado de registros de asistencia' })
+  @ApiNotFoundResponse({ description: 'La obra no existe o no está vigente' })
+  @ApiBadRequestResponse({ description: 'Parámetros inválidos' })
+  consultarAsistencias(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: ConsultarAsistenciasObraDto,
+  ) {
+    return this.obrasService.consultarAsistencias(id, query);
   }
 
   @Get(':id')

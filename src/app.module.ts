@@ -7,6 +7,7 @@ import { appConfig, databaseConfig, jwtConfig, storageConfig, validateEnv } from
 import { entities } from './entities';
 import { AsistenciasModule } from './asistencias/asistencias.module';
 import { AuthModule } from './auth/auth.module';
+import { CuadrillasModule } from './cuadrillas/cuadrillas.module';
 import { ObrasModule } from './obras/obras.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -41,6 +42,7 @@ import { StorageModule } from './storage/storage.module';
     }),
     AuthModule,
     ObrasModule,
+    CuadrillasModule,
     AsistenciasModule,
     StorageModule,
   ],

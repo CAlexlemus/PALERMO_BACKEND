@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDateString,
@@ -14,12 +14,10 @@ import {
 import { GeoPointDto } from '../../common/dto/geo-point.dto';
 import { EstadoAsistencia, TipoEvento } from '../../common/enums';
 
-function parseJsonField({ value }: { value: unknown }) {
-  if (typeof value !== 'string') {
-    return value;
-  }
+function parseGeoPointField({ value }: { value: unknown }) {
   try {
-    return JSON.parse(value);
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return plainToInstance(GeoPointDto, parsed);
   } catch {
     return value;
   }
@@ -82,9 +80,8 @@ export class CreateAsistenciaDto {
     nullable: true,
   })
   @IsOptional()
-  @Transform(parseJsonField)
+  @Transform(parseGeoPointField)
   @ValidateNested()
-  @Type(() => GeoPointDto)
   ubicacion?: GeoPointDto | null;
 
   @ApiPropertyOptional({

@@ -21,6 +21,7 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('App', 'Endpoints generales de la aplicación')
     .addTag('Auth', 'Autenticación, login y creación de usuarios')
     .addTag('Obras', 'Consulta, alta y baja lógica de obras y sus ubicaciones')
+    .addTag('Cuadrillas', 'Alta y baja de cuadrillas asociadas a una obra')
     .addTag('Asistencias', 'Registro de entradas/salidas (requiere JWT)')
     .build();
 

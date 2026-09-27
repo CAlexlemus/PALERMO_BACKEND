@@ -12,6 +12,7 @@ import { Cuadrilla, Rol, Turno, Usuario } from '../entities';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { LoginDto } from './dto/login.dto';
 import { UsuarioPublicoDto } from './dto/login-response.dto';
+import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import type { AuthUser, JwtPayload } from './types/auth-user.type';
 
 @Injectable()
@@ -137,6 +138,97 @@ export class AuthService {
       requiereFoto: createUsuarioDto.requiereFoto ?? null,
       requiereUbicacion: createUsuarioDto.requiereUbicacion ?? null,
     });
+
+    const guardado = await this.usuariosRepository.save(usuario);
+    return this.toPublicUser(guardado);
+  }
+
+  async updateUsuario(id: string, updateUsuarioDto: UpdateUsuarioDto) {
+    const usuario = await this.usuariosRepository.findOne({ where: { id } });
+    if (!usuario) {
+      throw new NotFoundException(`No se encontró el usuario "${id}"`);
+    }
+
+    if (updateUsuarioDto.nombreUsuario !== undefined) {
+      const existente = await this.usuariosRepository.findOne({
+        where: { nombreUsuario: updateUsuarioDto.nombreUsuario },
+      });
+
+      if (existente && existente.id !== id) {
+        throw new ConflictException(
+          `El usuario "${updateUsuarioDto.nombreUsuario}" ya existe`,
+        );
+      }
+
+      usuario.nombreUsuario = updateUsuarioDto.nombreUsuario;
+    }
+
+    if (updateUsuarioDto.rolId !== undefined) {
+      const rol = await this.rolesRepository.findOne({
+        where: { id: updateUsuarioDto.rolId },
+      });
+      if (!rol) {
+        throw new NotFoundException(
+          `No se encontró el rol "${updateUsuarioDto.rolId}"`,
+        );
+      }
+      usuario.rolId = updateUsuarioDto.rolId;
+    }
+
+    if (updateUsuarioDto.jefeId !== undefined) {
+      if (updateUsuarioDto.jefeId === id) {
+        throw new ConflictException('Un usuario no puede ser su propio jefe');
+      }
+
+      const jefe = await this.usuariosRepository.findOne({
+        where: { id: updateUsuarioDto.jefeId },
+      });
+      if (!jefe) {
+        throw new NotFoundException(
+          `No se encontró el jefe "${updateUsuarioDto.jefeId}"`,
+        );
+      }
+      usuario.jefeId = updateUsuarioDto.jefeId;
+    }
+
+    if (updateUsuarioDto.cuadrillaId !== undefined) {
+      const cuadrilla = await this.cuadrillasRepository.findOne({
+        where: { id: updateUsuarioDto.cuadrillaId },
+      });
+      if (!cuadrilla) {
+        throw new NotFoundException(
+          `No se encontró la cuadrilla "${updateUsuarioDto.cuadrillaId}"`,
+        );
+      }
+      usuario.cuadrillaId = updateUsuarioDto.cuadrillaId;
+    }
+
+    if (updateUsuarioDto.turnoId !== undefined) {
+      const turno = await this.turnosRepository.findOne({
+        where: { id: updateUsuarioDto.turnoId },
+      });
+      if (!turno) {
+        throw new NotFoundException(
+          `No se encontró el turno "${updateUsuarioDto.turnoId}"`,
+        );
+      }
+      usuario.turnoId = updateUsuarioDto.turnoId;
+    }
+
+    if (updateUsuarioDto.contrasena !== undefined) {
+      usuario.contrasenaHash = await bcrypt.hash(
+        updateUsuarioDto.contrasena,
+        10,
+      );
+    }
+
+    if (updateUsuarioDto.requiereFoto !== undefined) {
+      usuario.requiereFoto = updateUsuarioDto.requiereFoto;
+    }
+
+    if (updateUsuarioDto.requiereUbicacion !== undefined) {
+      usuario.requiereUbicacion = updateUsuarioDto.requiereUbicacion;
+    }
 
     const guardado = await this.usuariosRepository.save(usuario);
     return this.toPublicUser(guardado);

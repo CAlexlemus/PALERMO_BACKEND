@@ -8,6 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -23,6 +24,7 @@ import { Cuadrilla, Rol, Turno } from '../entities';
 import { AuthService } from './auth.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import {
   LoginResponseDto,
   UsuarioPublicoDto,
@@ -122,6 +124,28 @@ export class AuthController {
   })
   createUsuario(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.authService.createUsuario(createUsuarioDto);
+  }
+
+  @Put('usuarios/:id')
+  @ApiOperation({
+    summary: 'Editar usuario',
+    description:
+      'Actualiza únicamente los campos enviados con un valor no vacío.',
+  })
+  @ApiOkResponse({
+    description: 'Usuario actualizado correctamente',
+    type: UsuarioPublicoDto,
+  })
+  @ApiConflictResponse({ description: 'El nombre de usuario ya existe' })
+  @ApiBadRequestResponse({ description: 'Datos de entrada inválidos' })
+  @ApiNotFoundResponse({
+    description: 'El usuario, rol, jefe, cuadrilla o turno no existe',
+  })
+  updateUsuario(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUsuarioDto: UpdateUsuarioDto,
+  ) {
+    return this.authService.updateUsuario(id, updateUsuarioDto);
   }
 
   @Delete('usuarios/:id')
