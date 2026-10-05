@@ -14,8 +14,12 @@ import { entities } from './entities';
 import { AsistenciasModule } from './asistencias/asistencias.module';
 import { AuthModule } from './auth/auth.module';
 import { CuadrillasModule } from './cuadrillas/cuadrillas.module';
+import { DispositivosModule } from './dispositivos/dispositivos.module';
+import { EmpresasModule } from './empresas/empresas.module';
 import { ObrasModule } from './obras/obras.module';
 import { StorageModule } from './storage/storage.module';
+import { TrackingModule } from './tracking/tracking.module';
+import { VehiculosModule } from './vehiculos/vehiculos.module';
 
 @Module({
   imports: [
@@ -61,9 +65,13 @@ import { StorageModule } from './storage/storage.module';
       },
     }),
     AuthModule,
+    EmpresasModule,
+    DispositivosModule,
+    VehiculosModule,
     ObrasModule,
     CuadrillasModule,
     AsistenciasModule,
+    TrackingModule,
     StorageModule,
   ],
   controllers: [AppController],

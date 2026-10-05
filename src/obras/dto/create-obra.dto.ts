@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   Min,
   ValidateNested,
@@ -22,6 +23,16 @@ export class CreateObraDto {
   @IsNotEmpty()
   @MaxLength(150)
   nombre!: string;
+
+  @ApiPropertyOptional({
+    example: 'e1111111-1111-1111-1111-111111111111',
+    format: 'uuid',
+    description: 'ID de la empresa dueña de la obra',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUUID()
+  empresaId?: string | null;
 
   @ApiProperty({
     type: () => GeoPointDto,

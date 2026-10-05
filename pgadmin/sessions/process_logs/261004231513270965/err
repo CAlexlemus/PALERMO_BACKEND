@@ -1,0 +1,128 @@
+261004231513799616,pg_dump: last built-in OID is 16383
+
+261004231513816843,pg_dump: reading extensions
+
+261004231513835104,pg_dump: identifying extension members
+
+261004231513846159,pg_dump: reading schemas
+
+261004231513850561,pg_dump: reading user-defined tables
+
+261004231513892958,pg_dump: reading user-defined functions
+
+261004231513963318,pg_dump: reading user-defined types
+
+261004231513967865,pg_dump: reading procedural languages
+
+261004231513970430,pg_dump: reading user-defined aggregate functions
+
+261004231513972633,pg_dump: reading user-defined operators
+
+261004231513987044,pg_dump: reading user-defined access methods
+
+261004231513988939,pg_dump: reading user-defined operator classes
+
+261004231514016165,pg_dump: reading user-defined operator families
+
+261004231514041640,pg_dump: reading user-defined text search parsers
+
+261004231514068838,pg_dump: reading user-defined text search templates
+
+261004231514126430,pg_dump: reading user-defined text search dictionaries
+
+261004231514152500,pg_dump: reading user-defined text search configurations
+
+261004231514176662,pg_dump: reading user-defined foreign-data wrappers
+
+261004231514192617,pg_dump: reading user-defined foreign servers
+
+261004231514208673,pg_dump: reading default privileges
+
+261004231514217224,pg_dump: reading user-defined collations
+
+261004231514223466,pg_dump: reading user-defined conversions
+
+261004231514260843,pg_dump: reading type casts
+
+261004231514297123,pg_dump: reading transforms
+
+261004231514297679,pg_dump: reading table inheritance information
+
+261004231514299559,pg_dump: reading event triggers
+
+261004231514301566,pg_dump: finding extension tables
+
+261004231514303972,pg_dump: finding inheritance relationships
+
+261004231514304418,pg_dump: reading column info for interesting tables
+
+261004231514337154,pg_dump: finding table default expressions
+
+261004231514341260,pg_dump: finding table check constraints
+
+261004231514343212,pg_dump: flagging inherited columns in subtables
+
+261004231514344498,pg_dump: reading partitioning data
+
+261004231514353917,pg_dump: reading indexes
+
+261004231514362298,pg_dump: flagging indexes in partitioned tables
+
+261004231514363389,pg_dump: reading extended statistics
+
+261004231514389413,pg_dump: reading constraints
+
+261004231514390017,pg_dump: reading triggers
+
+261004231514391872,pg_dump: reading rewrite rules
+
+261004231514393332,pg_dump: reading policies
+
+261004231514393740,pg_dump: reading row-level security policies
+
+261004231514394715,pg_dump: reading publications
+
+261004231514395779,pg_dump: reading publication membership of tables
+
+261004231514418229,pg_dump: reading publication membership of schemas
+
+261004231514433841,pg_dump: reading subscriptions
+
+261004231514437438,pg_dump: reading large objects
+
+261004231514438330,pg_dump: reading dependency data
+
+261004231514553328,pg_dump: saving encoding = UTF8
+
+261004231514555489,pg_dump: saving standard_conforming_strings = on
+
+261004231514556705,pg_dump: saving search_path = 
+
+261004231514559535,pg_dump: saving database definition
+
+261004231514631361,pg_dump: dumping contents of table "public.cuadrillas"
+
+261004231514644959,pg_dump: dumping contents of table "public.obras"
+
+261004231514656748,pg_dump: dumping contents of table "public.registrosasistencia"
+
+261004231514658344,pg_dump: dumping contents of table "public.roles"
+
+261004231514670428,pg_dump: dumping contents of table "public.spatial_ref_sys"
+
+261004231515657626,pg_dump: dumping contents of table "public.turnos"
+
+261004231515671495,pg_dump: dumping contents of table "public.usuarios"
+
+261004231515684879,pg_dump: dumping contents of table "tiger.geocode_settings"
+
+261004231515688842,pg_dump: dumping contents of table "tiger.pagc_gaz"
+
+261004231515713157,pg_dump: dumping contents of table "tiger.pagc_lex"
+
+261004231515763180,pg_dump: dumping contents of table "tiger.pagc_rules"
+
+261004231515865144,pg_dump: dumping contents of table "topology.topology"
+
+261004231515867868,pg_dump: dumping contents of table "topology.layer"
+

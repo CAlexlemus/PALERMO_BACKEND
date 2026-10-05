@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
-import { Cuadrilla, Rol, Turno, Usuario } from '../entities';
+import { Cuadrilla, Empresa, Rol, Turno, Usuario } from '../entities';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { LoginDto } from './dto/login.dto';
 import { UsuarioPublicoDto } from './dto/login-response.dto';
@@ -26,6 +26,8 @@ export class AuthService {
     private readonly cuadrillasRepository: Repository<Cuadrilla>,
     @InjectRepository(Turno)
     private readonly turnosRepository: Repository<Turno>,
+    @InjectRepository(Empresa)
+    private readonly empresasRepository: Repository<Empresa>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -126,6 +128,17 @@ export class AuthService {
       );
     }
 
+    if (createUsuarioDto.empresaId) {
+      const empresa = await this.empresasRepository.findOne({
+        where: { id: createUsuarioDto.empresaId, vigente: true },
+      });
+      if (!empresa) {
+        throw new NotFoundException(
+          `No se encontró la empresa vigente "${createUsuarioDto.empresaId}"`,
+        );
+      }
+    }
+
     const contrasenaHash = await bcrypt.hash(createUsuarioDto.contrasena, 10);
 
     const usuario = this.usuariosRepository.create({
@@ -135,6 +148,7 @@ export class AuthService {
       jefeId: createUsuarioDto.jefeId ?? null,
       cuadrillaId: createUsuarioDto.cuadrillaId,
       turnoId: createUsuarioDto.turnoId,
+      empresaId: createUsuarioDto.empresaId ?? null,
       requiereFoto: createUsuarioDto.requiereFoto ?? null,
       requiereUbicacion: createUsuarioDto.requiereUbicacion ?? null,
     });
@@ -215,6 +229,18 @@ export class AuthService {
       usuario.turnoId = updateUsuarioDto.turnoId;
     }
 
+    if (updateUsuarioDto.empresaId !== undefined) {
+      const empresa = await this.empresasRepository.findOne({
+        where: { id: updateUsuarioDto.empresaId, vigente: true },
+      });
+      if (!empresa) {
+        throw new NotFoundException(
+          `No se encontró la empresa vigente "${updateUsuarioDto.empresaId}"`,
+        );
+      }
+      usuario.empresaId = updateUsuarioDto.empresaId;
+    }
+
     if (updateUsuarioDto.contrasena !== undefined) {
       usuario.contrasenaHash = await bcrypt.hash(
         updateUsuarioDto.contrasena,
@@ -255,6 +281,7 @@ export class AuthService {
       jefeId: usuario.jefeId,
       cuadrillaId: usuario.cuadrillaId,
       turnoId: usuario.turnoId,
+      empresaId: usuario.empresaId,
       requiereFoto: usuario.requiereFoto,
       requiereUbicacion: usuario.requiereUbicacion,
     };

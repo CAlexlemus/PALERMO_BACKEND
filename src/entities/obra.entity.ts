@@ -14,6 +14,15 @@ export class Obra {
   @Column({ name: 'nombre', type: 'varchar', length: 150 })
   nombre!: string;
 
+  @ApiPropertyOptional({
+    example: 'e1111111-1111-1111-1111-111111111111',
+    format: 'uuid',
+    nullable: true,
+    description: 'Empresa dueña de la obra (misma empresa del piloto al crear viajes)',
+  })
+  @Column({ name: 'empresaid', type: 'uuid', nullable: true })
+  empresaId!: string | null;
+
   @ApiProperty({ type: () => GeoPointDto })
   @Column({
     name: 'ubicacion',

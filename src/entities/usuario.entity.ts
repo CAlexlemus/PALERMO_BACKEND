@@ -39,6 +39,15 @@ export class Usuario {
   @Column({ name: 'turnoid', type: 'integer', nullable: true })
   turnoId!: number | null;
 
+  @ApiPropertyOptional({
+    example: 'e1111111-1111-1111-1111-111111111111',
+    format: 'uuid',
+    nullable: true,
+    description: 'Empresa a la que pertenece el usuario (requerida al crear viajes)',
+  })
+  @Column({ name: 'empresaid', type: 'uuid', nullable: true })
+  empresaId!: string | null;
+
   @ApiPropertyOptional({ example: true, nullable: true })
   @Column({ name: 'requierefoto', type: 'boolean', nullable: true })
   requiereFoto!: boolean | null;

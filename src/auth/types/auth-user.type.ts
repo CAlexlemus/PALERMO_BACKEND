@@ -11,6 +11,7 @@ export type AuthUser = {
   jefeId: string | null;
   cuadrillaId: number | null;
   turnoId: number | null;
+  empresaId: string | null;
   requiereFoto: boolean | null;
   requiereUbicacion: boolean | null;
 };

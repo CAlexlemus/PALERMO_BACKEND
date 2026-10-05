@@ -1,0 +1,6 @@
+export enum CalidadPunto {
+  PENDIENTE = 'PENDIENTE',
+  VALIDO = 'VALIDO',
+  BAJA_PRECISION = 'BAJA_PRECISION',
+  SOSPECHOSO = 'SOSPECHOSO',
+}

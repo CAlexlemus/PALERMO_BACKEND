@@ -81,6 +81,7 @@ export class ObrasService {
   create(createObraDto: CreateObraDto) {
     const obra = this.obrasRepository.create({
       nombre: createObraDto.nombre,
+      empresaId: createObraDto.empresaId ?? null,
       ubicacion: createObraDto.ubicacion,
       radioMetros: createObraDto.radioMetros ?? 50,
       requiereFoto: createObraDto.requiereFoto ?? null,

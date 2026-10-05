@@ -64,6 +64,16 @@ export class CreateUsuarioDto {
   turnoId!: number;
 
   @ApiPropertyOptional({
+    example: 'e1111111-1111-1111-1111-111111111111',
+    format: 'uuid',
+    description: 'ID de la empresa a la que pertenece el usuario',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUUID()
+  empresaId?: string | null;
+
+  @ApiPropertyOptional({
     example: true,
     description: 'Si el usuario debe capturar foto al marcar asistencia',
     nullable: true,

@@ -23,6 +23,13 @@ export class UsuarioPublicoDto {
   @ApiProperty({ example: 1, nullable: true })
   turnoId!: number | null;
 
+  @ApiProperty({
+    example: 'e1111111-1111-1111-1111-111111111111',
+    format: 'uuid',
+    nullable: true,
+  })
+  empresaId!: string | null;
+
   @ApiProperty({ example: true, nullable: true })
   requiereFoto!: boolean | null;
 
