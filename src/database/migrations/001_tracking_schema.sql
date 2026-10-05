@@ -3,7 +3,7 @@
 -- Requiere que existan: usuarios, obras.
 -- Ejecutar con: npm run db:migrate:tracking
 
-CREATE EXTENSION IF NOT EXISTS postgis;
+--CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- ---------------------------------------------------------------------------
 -- Catálogos
