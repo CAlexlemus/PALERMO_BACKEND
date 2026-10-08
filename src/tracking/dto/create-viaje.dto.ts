@@ -28,7 +28,7 @@ export class CreateViajeDto {
   @ApiProperty({
     example: 'd1111111-1111-1111-1111-111111111111',
     format: 'uuid',
-    description: 'Dispositivo asignado al piloto autenticado',
+    description: 'Dispositivo vigente de la misma empresa del piloto',
   })
   @IsUUID()
   dispositivoId!: string;

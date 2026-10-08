@@ -89,12 +89,9 @@ export class ViajesService {
         `No se encontró el dispositivo vigente "${dto.dispositivoId}"`,
       );
     }
-    if (
-      dispositivo.pilotoId !== user.id ||
-      dispositivo.empresaId !== empresaId
-    ) {
+    if (dispositivo.empresaId !== empresaId) {
       throw new UnprocessableEntityException(
-        'El dispositivo no está asignado al piloto autenticado o no pertenece a su empresa',
+        'El dispositivo no pertenece a la empresa del piloto',
       );
     }
 
