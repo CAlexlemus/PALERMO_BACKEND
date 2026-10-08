@@ -1,8 +1,33 @@
 export function validateEnv(config: Record<string, unknown>) {
-  const hasDatabaseUrl =
-    typeof config.DATABASE_URL === 'string' && config.DATABASE_URL.length > 0;
+  const rawTarget = String(config.DB_TARGET ?? '')
+    .trim()
+    .toLowerCase();
+  if (rawTarget && rawTarget !== 'local' && rawTarget !== 'railway') {
+    throw new Error('DB_TARGET must be "local" or "railway"');
+  }
 
-  if (!hasDatabaseUrl) {
+  const target: 'local' | 'railway' =
+    rawTarget === 'local' || rawTarget === 'railway'
+      ? rawTarget
+      : typeof config.DATABASE_URL === 'string' && config.DATABASE_URL.length > 0
+        ? 'railway'
+        : 'local';
+
+  const railwayUrl =
+    typeof config.RAILWAY_DATABASE_URL === 'string'
+      ? config.RAILWAY_DATABASE_URL.trim()
+      : '';
+  const databaseUrl =
+    typeof config.DATABASE_URL === 'string' ? config.DATABASE_URL.trim() : '';
+  const hasRemoteUrl = Boolean(railwayUrl || databaseUrl);
+
+  if (target === 'railway') {
+    if (!hasRemoteUrl) {
+      throw new Error(
+        'DB_TARGET=railway requiere RAILWAY_DATABASE_URL (URL pública de Postgres en Railway) o DATABASE_URL.',
+      );
+    }
+  } else {
     const requiredKeys = [
       'DB_HOST',
       'DB_PORT',
@@ -15,7 +40,7 @@ export function validateEnv(config: Record<string, unknown>) {
 
     if (missingKeys.length > 0) {
       throw new Error(
-        `Missing required environment variables: ${missingKeys.join(', ')}. Set DATABASE_URL or the DB_* variables.`,
+        `Missing required environment variables: ${missingKeys.join(', ')}. Set DB_* for local or DB_TARGET=railway with RAILWAY_DATABASE_URL.`,
       );
     }
 

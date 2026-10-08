@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import {
   Cuadrilla,
@@ -22,17 +23,42 @@ import { LotePuntosDto, PuntoLoteDto } from '../tracking/dto/lote-puntos.dto';
 import { SincronizacionViajeDto } from '../tracking/dto/sincronizacion-viaje.dto';
 
 export function setupSwagger(app: INestApplication): void {
-  const config = new DocumentBuilder()
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('app.port') ?? 3000;
+  const publicUrl = configService.get<string>('app.publicUrl');
+  const productionUrl =
+    configService.get<string>('app.productionUrl') ??
+    'https://befcobackend-production-de41.up.railway.app';
+
+  const localUrl = publicUrl ?? `http://localhost:${port}`;
+  const isRunningOnProduction =
+    publicUrl != null &&
+    publicUrl.replace(/\/$/, '') === productionUrl.replace(/\/$/, '');
+
+  const builder = new DocumentBuilder()
     .setTitle('BEFCO API')
     .setDescription(
       'API del backend BEFCO para gestión de asistencia en obra y rastreo de rutas ' +
         'de transporte (viajes GPS por lotes, sincronización idempotente y GeoJSON). ' +
         'Autenticación JWT Bearer en endpoints protegidos. ' +
         'Códigos frecuentes del módulo de rastreo: 401 (sin sesión), 403 (empresa/piloto), ' +
-        '409 (conflicto de contenido o cierre), 422 (reglas de negocio / referencias inválidas).',
+        '409 (conflicto de contenido o cierre), 422 (reglas de negocio / referencias inválidas). ' +
+        'Usa el selector de Servers para apuntar a Local o Producción (Railway).',
     )
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth();
+
+  if (isRunningOnProduction) {
+    builder
+      .addServer(productionUrl, 'Producción (Railway)')
+      .addServer(`http://localhost:${port}`, 'Local (desarrollo)');
+  } else {
+    builder
+      .addServer(localUrl, 'Local (desarrollo)')
+      .addServer(productionUrl, 'Producción (Railway)');
+  }
+
+  const config = builder
     .addTag('App', 'Endpoints generales de la aplicación')
     .addTag('Auth', 'Autenticación, login y creación de usuarios')
     .addTag('Empresas', 'Alta, listado y baja lógica de empresas (requiere JWT)')

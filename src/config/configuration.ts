@@ -7,19 +7,82 @@ export const appConfig = registerAs('app', () => ({
   corsOrigin: process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
     : true,
+  /**
+   * URL pública de este despliegue (para Swagger y clientes).
+   * En local suele omitirse; Swagger usa http://localhost:{PORT}.
+   */
+  publicUrl: process.env.PUBLIC_URL?.replace(/\/$/, '') || undefined,
+  /**
+   * URL del API en producción (Railway). Aparece como segundo servidor en Swagger.
+   * Ejemplo: https://befcobackend-production-de41.up.railway.app
+   */
+  productionUrl: (
+    process.env.PRODUCTION_URL ??
+    'https://befcobackend-production-de41.up.railway.app'
+  ).replace(/\/$/, ''),
 }));
 
-export const databaseConfig = registerAs('database', () => ({
-  /** Railway (y otros hosts) inyectan la conexión completa. En local se usan DB_*. */
-  url: process.env.DATABASE_URL,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  synchronize: process.env.DB_SYNCHRONIZE === 'true',
-  logging: process.env.DB_LOGGING === 'true',
-}));
+export const databaseConfig = registerAs('database', () => {
+  const target = resolveDbTarget();
+  const url = resolveDatabaseUrl(target);
+  const usingRailway = target === 'railway' || Boolean(url && isRemoteDatabaseUrl(url));
+
+  return {
+    /** local | railway — controla a qué Postgres se conecta el API en desarrollo. */
+    target,
+    /**
+     * URL completa. En local con DB_TARGET=local queda undefined y se usan DB_*.
+     * En Railway (deploy) o con DB_TARGET=railway usa RAILWAY_DATABASE_URL / DATABASE_URL.
+     */
+    url,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : undefined,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    /**
+     * En Railway/remoto no sincronizar esquema por defecto (evita alterar prod).
+     * Fuerza con DB_SYNCHRONIZE=true solo si sabes lo que haces.
+     */
+    synchronize: usingRailway
+      ? process.env.DB_SYNCHRONIZE === 'true' &&
+        process.env.DB_SYNCHRONIZE_REMOTE === 'true'
+      : process.env.DB_SYNCHRONIZE === 'true',
+    logging: process.env.DB_LOGGING === 'true',
+  };
+});
+
+/** local | railway. Sin valor: si hay DATABASE_URL se comporta como deploy remoto. */
+function resolveDbTarget(): 'local' | 'railway' {
+  const raw = (process.env.DB_TARGET ?? '').trim().toLowerCase();
+  if (raw === 'local' || raw === 'railway') {
+    return raw;
+  }
+  return process.env.DATABASE_URL ? 'railway' : 'local';
+}
+
+function resolveDatabaseUrl(target: 'local' | 'railway'): string | undefined {
+  if (target === 'local') {
+    return undefined;
+  }
+
+  const railwayUrl = process.env.RAILWAY_DATABASE_URL?.trim();
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  return railwayUrl || databaseUrl || undefined;
+}
+
+function isRemoteDatabaseUrl(databaseUrl: string): boolean {
+  try {
+    const hostname = new URL(databaseUrl).hostname;
+    return (
+      hostname !== 'localhost' &&
+      hostname !== '127.0.0.1' &&
+      !hostname.endsWith('railway.internal')
+    );
+  } catch {
+    return false;
+  }
+}
 
 export const jwtConfig = registerAs('jwt', () => ({
   secret: process.env.JWT_SECRET!,

@@ -87,6 +87,22 @@ export class ViajesController {
     return this.viajesService.finalizar(user, id, dto);
   }
 
+  @Get('rutas')
+  @ApiOperation({
+    summary: 'Rutas GeoJSON de la empresa',
+    description:
+      'Devuelve todas las rutas de la empresa del JWT, de la más reciente a la más antigua. ' +
+      'Cada elemento es un FeatureCollection con LineStrings, inicio/fin, calidad y huecos.',
+  })
+  @ApiOkResponse({ description: 'Listado de rutas GeoJSON' })
+  @ApiUnauthorizedResponse({ description: 'JWT ausente o inválido' })
+  @ApiUnprocessableEntityResponse({
+    description: 'El usuario no tiene empresa asignada',
+  })
+  rutas(@CurrentUser() user: AuthUser) {
+    return this.rutasService.listarRutas(user);
+  }
+
   @Get(':id/sincronizacion')
   @ApiOperation({
     summary: 'Estado de sincronización del viaje',

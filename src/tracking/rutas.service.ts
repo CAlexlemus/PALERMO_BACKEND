@@ -2,8 +2,13 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import type { AuthUser } from '../auth/types/auth-user.type';
 import { CalidadPunto } from '../common/enums/calidad-punto.enum';
+import { EstadoViaje } from '../common/enums/estado-viaje.enum';
 import { ConsultaPuntosDto } from './dto/consulta-puntos.dto';
-import { assertCanReadViaje, toNumber } from './tracking.access';
+import {
+  assertCanReadViaje,
+  requireEmpresaId,
+  toNumber,
+} from './tracking.access';
 import { ViajesService } from './viajes.service';
 
 type PuntoRaw = {
@@ -35,6 +40,7 @@ export type RutaGeoJsonResponse = {
   type: 'FeatureCollection';
   properties: {
     viajeId: string;
+    estado?: EstadoViaje;
     revisionDatos: number;
     revisionRuta: number;
     rutaPendiente: boolean;
@@ -219,6 +225,262 @@ export class RutasService {
       },
       features,
     };
+  }
+
+  async listarRutas(user: AuthUser): Promise<{ rutas: RutaGeoJsonResponse[] }> {
+    const empresaId = requireEmpresaId(user);
+
+    const viajes = (await this.dataSource.query(
+      `
+      SELECT
+        id,
+        estado,
+        revision_datos,
+        revision_ruta,
+        distancia_observada_m
+      FROM viajes
+      WHERE empresa_id = $1::uuid
+      ORDER BY inicio_dispositivo DESC
+      `,
+      [empresaId],
+    )) as Array<{
+      id: string;
+      estado: EstadoViaje;
+      revision_datos: string;
+      revision_ruta: string;
+      distancia_observada_m: number | null;
+    }>;
+
+    if (viajes.length === 0) {
+      return { rutas: [] };
+    }
+
+    const segmentos = (await this.dataSource.query(
+      `
+      SELECT
+        s.viaje_id,
+        s.numero,
+        s.secuencia_desde,
+        s.secuencia_hasta,
+        s.distancia_m,
+        ST_AsGeoJSON(s.geom)::json AS geom
+      FROM segmentos_viaje s
+      INNER JOIN viajes v ON v.id = s.viaje_id
+      WHERE v.empresa_id = $1::uuid
+      ORDER BY s.viaje_id, s.numero
+      `,
+      [empresaId],
+    )) as Array<{
+      viaje_id: string;
+      numero: number;
+      secuencia_desde: string;
+      secuencia_hasta: string;
+      distancia_m: number;
+      geom: { type: 'LineString'; coordinates: [number, number][] };
+    }>;
+
+    const extremos = (await this.dataSource.query(
+      `
+      WITH ranked AS (
+        SELECT
+          viaje_id,
+          secuencia,
+          calidad,
+          ST_X(geom) AS longitud,
+          ST_Y(geom) AS latitud,
+          precision_m,
+          ROW_NUMBER() OVER (PARTITION BY viaje_id ORDER BY secuencia ASC) AS rn_asc,
+          ROW_NUMBER() OVER (PARTITION BY viaje_id ORDER BY secuencia DESC) AS rn_desc
+        FROM puntos_viaje
+        WHERE viaje_id IN (SELECT id FROM viajes WHERE empresa_id = $1::uuid)
+      )
+      SELECT viaje_id, secuencia, calidad, longitud, latitud, precision_m, rn_asc, rn_desc
+      FROM ranked
+      WHERE rn_asc = 1 OR rn_desc = 1
+      ORDER BY viaje_id, secuencia
+      `,
+      [empresaId],
+    )) as Array<{
+      viaje_id: string;
+      secuencia: string;
+      calidad: CalidadPunto;
+      longitud: number;
+      latitud: number;
+      precision_m: number;
+      rn_asc: string;
+      rn_desc: string;
+    }>;
+
+    const conteos = (await this.dataSource.query(
+      `
+      SELECT
+        p.viaje_id,
+        COUNT(*) FILTER (WHERE p.calidad = 'VALIDO')::int AS validos,
+        COUNT(*) FILTER (WHERE p.calidad = 'BAJA_PRECISION')::int AS baja_precision,
+        COUNT(*) FILTER (WHERE p.calidad = 'SOSPECHOSO')::int AS sospechosos,
+        COUNT(*) FILTER (WHERE p.calidad = 'PENDIENTE')::int AS pendientes
+      FROM puntos_viaje p
+      INNER JOIN viajes v ON v.id = p.viaje_id
+      WHERE v.empresa_id = $1::uuid
+      GROUP BY p.viaje_id
+      `,
+      [empresaId],
+    )) as Array<{
+      viaje_id: string;
+      validos: number;
+      baja_precision: number;
+      sospechosos: number;
+      pendientes: number;
+    }>;
+
+    const huecosRows = (await this.dataSource.query(
+      `
+      WITH ordered AS (
+        SELECT p.viaje_id, p.secuencia::bigint AS secuencia
+        FROM puntos_viaje p
+        INNER JOIN viajes v ON v.id = p.viaje_id
+        WHERE v.empresa_id = $1::uuid
+      ),
+      gaps AS (
+        SELECT
+          viaje_id,
+          lag(secuencia) OVER (PARTITION BY viaje_id ORDER BY secuencia) AS prev,
+          secuencia AS curr
+        FROM ordered
+      )
+      SELECT viaje_id, (prev + 1) AS desde, (curr - 1) AS hasta
+      FROM gaps
+      WHERE prev IS NOT NULL AND curr > prev + 1
+      ORDER BY viaje_id, desde
+      `,
+      [empresaId],
+    )) as Array<{ viaje_id: string; desde: string; hasta: string }>;
+
+    const segmentosPorViaje = new Map<string, typeof segmentos>();
+    for (const segmento of segmentos) {
+      const lista = segmentosPorViaje.get(segmento.viaje_id) ?? [];
+      lista.push(segmento);
+      segmentosPorViaje.set(segmento.viaje_id, lista);
+    }
+
+    const extremosPorViaje = new Map<string, typeof extremos>();
+    for (const extremo of extremos) {
+      const lista = extremosPorViaje.get(extremo.viaje_id) ?? [];
+      lista.push(extremo);
+      extremosPorViaje.set(extremo.viaje_id, lista);
+    }
+
+    const conteosPorViaje = new Map(conteos.map((c) => [c.viaje_id, c]));
+
+    const huecosPorViaje = new Map<
+      string,
+      Array<{ desdeSecuencia: number; hastaSecuencia: number }>
+    >();
+    for (const hueco of huecosRows) {
+      const lista = huecosPorViaje.get(hueco.viaje_id) ?? [];
+      lista.push({
+        desdeSecuencia: toNumber(hueco.desde),
+        hastaSecuencia: toNumber(hueco.hasta),
+      });
+      huecosPorViaje.set(hueco.viaje_id, lista);
+    }
+
+    const rutas = viajes.map((viaje) => {
+      const revisionDatos = toNumber(viaje.revision_datos);
+      const revisionRuta = toNumber(viaje.revision_ruta);
+      const features: Array<Record<string, unknown>> = (
+        segmentosPorViaje.get(viaje.id) ?? []
+      ).map((s) => ({
+        type: 'Feature',
+        geometry: s.geom,
+        properties: {
+          tipo: 'segmento',
+          numero: s.numero,
+          secuenciaDesde: toNumber(s.secuencia_desde),
+          secuenciaHasta: toNumber(s.secuencia_hasta),
+          distanciaM: s.distancia_m,
+        },
+      }));
+
+      const puntosExtremos = extremosPorViaje.get(viaje.id) ?? [];
+      if (puntosExtremos.length > 0) {
+        const start = puntosExtremos[0];
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [Number(start.longitud), Number(start.latitud)],
+          },
+          properties: {
+            tipo: 'inicio',
+            secuencia: toNumber(start.secuencia),
+            calidad: start.calidad,
+            precisionM: Number(start.precision_m),
+          },
+        });
+      }
+
+      if (puntosExtremos.length > 1) {
+        const end = puntosExtremos[puntosExtremos.length - 1];
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [Number(end.longitud), Number(end.latitud)],
+          },
+          properties: {
+            tipo: 'fin',
+            secuencia: toNumber(end.secuencia),
+            calidad: end.calidad,
+            precisionM: Number(end.precision_m),
+          },
+        });
+      } else if (puntosExtremos.length === 1) {
+        const only = puntosExtremos[0];
+        features.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [Number(only.longitud), Number(only.latitud)],
+          },
+          properties: {
+            tipo: 'punto_aislado',
+            secuencia: toNumber(only.secuencia),
+            calidad: only.calidad,
+            precisionM: Number(only.precision_m),
+          },
+        });
+      }
+
+      const c = conteosPorViaje.get(viaje.id) ?? {
+        validos: 0,
+        baja_precision: 0,
+        sospechosos: 0,
+        pendientes: 0,
+      };
+
+      return {
+        type: 'FeatureCollection' as const,
+        properties: {
+          viajeId: viaje.id,
+          estado: viaje.estado,
+          revisionDatos,
+          revisionRuta,
+          rutaPendiente: revisionRuta < revisionDatos,
+          distanciaObservadaM: viaje.distancia_observada_m,
+          calidad: {
+            validos: c.validos,
+            bajaPrecision: c.baja_precision,
+            sospechosos: c.sospechosos,
+            pendientes: c.pendientes,
+          },
+          huecos: huecosPorViaje.get(viaje.id) ?? [],
+        },
+        features,
+      };
+    });
+
+    return { rutas };
   }
 
   async getPuntos(

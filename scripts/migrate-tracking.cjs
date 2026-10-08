@@ -53,13 +53,38 @@ function needsSsl(databaseUrl) {
   }
 }
 
+function resolveDbTarget() {
+  const raw = (process.env.DB_TARGET || '').trim().toLowerCase();
+  if (raw === 'local' || raw === 'railway') {
+    return raw;
+  }
+  return process.env.DATABASE_URL ? 'railway' : 'local';
+}
+
+function resolveDatabaseUrl(target) {
+  if (target === 'local') {
+    return undefined;
+  }
+  return (
+    (process.env.RAILWAY_DATABASE_URL || '').trim() ||
+    (process.env.DATABASE_URL || '').trim() ||
+    undefined
+  );
+}
+
 function buildClient() {
-  const databaseUrl = process.env.DATABASE_URL;
+  const target = resolveDbTarget();
+  const databaseUrl = resolveDatabaseUrl(target);
+
   if (databaseUrl) {
-    return new Client({
-      connectionString: databaseUrl,
-      ssl: needsSsl(databaseUrl) ? { rejectUnauthorized: false } : false,
-    });
+    return {
+      target,
+      label: new URL(databaseUrl).hostname,
+      client: new Client({
+        connectionString: databaseUrl,
+        ssl: needsSsl(databaseUrl) ? { rejectUnauthorized: false } : false,
+      }),
+    };
   }
 
   const host = process.env.DB_HOST;
@@ -70,17 +95,21 @@ function buildClient() {
 
   if (!host || !port || !user || !database) {
     throw new Error(
-      'Faltan variables de conexión. Defina DATABASE_URL o DB_HOST/DB_PORT/DB_USERNAME/DB_PASSWORD/DB_NAME.',
+      'Faltan variables de conexión. Use DB_TARGET=local con DB_* o DB_TARGET=railway con RAILWAY_DATABASE_URL.',
     );
   }
 
-  return new Client({
-    host,
-    port: Number(port),
-    user,
-    password: password ?? '',
-    database,
-  });
+  return {
+    target,
+    label: host,
+    client: new Client({
+      host,
+      port: Number(port),
+      user,
+      password: password ?? '',
+      database,
+    }),
+  };
 }
 
 async function main() {
@@ -97,7 +126,8 @@ async function main() {
   );
   const sql = fs.readFileSync(sqlPath, 'utf8');
 
-  const client = buildClient();
+  const { target, label, client } = buildClient();
+  console.log(`DB target: ${target} → ${label}`);
   await client.connect();
 
   try {
