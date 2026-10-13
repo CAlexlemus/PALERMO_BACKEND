@@ -36,9 +36,9 @@ export function setupSwagger(app: INestApplication): void {
     publicUrl.replace(/\/$/, '') === productionUrl.replace(/\/$/, '');
 
   const builder = new DocumentBuilder()
-    .setTitle('BEFCO API')
+    .setTitle('Condominio Villas Palermo API')
     .setDescription(
-      'API del backend BEFCO para gestión de asistencia en obra y rastreo de rutas ' +
+      'API de Condominio Villas Palermo para gestión de asistencia en obra y rastreo de rutas ' +
         'de transporte (viajes GPS por lotes, sincronización idempotente y GeoJSON). ' +
         'Autenticación JWT Bearer en endpoints protegidos. ' +
         'Códigos frecuentes del módulo de rastreo: 401 (sin sesión), 403 (empresa/piloto), ' +
