@@ -68,7 +68,7 @@ export class ObrasService {
       .addSelect('ST_AsGeoJSON(rg.ubicacion)::json', 'ubicacion')
       .addSelect('rg.tipoEvento', 'tipoevento')
       .addSelect("TO_CHAR(rg.fechaHoraServidor, 'HH24:MI:SS')", 'hora')
-      .addSelect('rg.fechaHoraServidor', 'fechahoraservidor')
+      .addSelect('rg.fechaHoraDispositivo', 'fechahoraservidor')
       .where('rg.obraId = :obraId', { obraId })
       .andWhere(
         'rg.fechaHoraServidor BETWEEN :fechaInicio AND :fechaFin',
