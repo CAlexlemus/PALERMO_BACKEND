@@ -28,7 +28,7 @@ export function setupSwagger(app: INestApplication): void {
   const publicUrl = configService.get<string>('app.publicUrl');
   const productionUrl =
     configService.get<string>('app.productionUrl') ??
-    'https://befcobackend-production-de41.up.railway.app';
+    'https://palermobackend-production.up.railway.app';
 
   const localUrl = publicUrl ?? `http://localhost:${port}`;
   const isRunningOnProduction =
@@ -61,7 +61,10 @@ export function setupSwagger(app: INestApplication): void {
   const config = builder
     .addTag('App', 'Endpoints generales de la aplicación')
     .addTag('Auth', 'Autenticación, login y creación de usuarios')
-    .addTag('Empresas', 'Alta, listado y baja lógica de empresas (requiere JWT)')
+    .addTag(
+      'Empresas',
+      'Alta, listado y baja lógica de empresas (requiere JWT)',
+    )
     .addTag(
       'Dispositivos',
       'Alta, listado y baja lógica de dispositivos (requiere JWT)',
@@ -73,6 +76,10 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('Obras', 'Consulta, alta y baja lógica de obras y sus ubicaciones')
     .addTag('Cuadrillas', 'Alta y baja de cuadrillas asociadas a una obra')
     .addTag('Asistencias', 'Registro de entradas/salidas (requiere JWT)')
+    .addTag(
+      'Incidencias',
+      'Reporte de incidencias con fotografías privadas en bucket S3 (requiere JWT)',
+    )
     .addTag(
       'Viajes',
       'Inicio, cierre, sincronización y consulta de rutas de transporte (requiere JWT)',

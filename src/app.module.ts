@@ -7,11 +7,13 @@ import {
   appConfig,
   databaseConfig,
   jwtConfig,
+  s3Config,
   storageConfig,
   validateEnv,
 } from './config';
 import { entities } from './entities';
 import { AsistenciasModule } from './asistencias/asistencias.module';
+import { IncidenciasModule } from './incidencias/incidencias.module';
 import { AuthModule } from './auth/auth.module';
 import { CuadrillasModule } from './cuadrillas/cuadrillas.module';
 import { DispositivosModule } from './dispositivos/dispositivos.module';
@@ -26,7 +28,7 @@ import { VehiculosModule } from './vehiculos/vehiculos.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
-      load: [appConfig, databaseConfig, jwtConfig, storageConfig],
+      load: [appConfig, databaseConfig, jwtConfig, storageConfig, s3Config],
       validate: validateEnv,
     }),
     TypeOrmModule.forRootAsync({
@@ -71,6 +73,7 @@ import { VehiculosModule } from './vehiculos/vehiculos.module';
     ObrasModule,
     CuadrillasModule,
     AsistenciasModule,
+    IncidenciasModule,
     TrackingModule,
     StorageModule,
   ],

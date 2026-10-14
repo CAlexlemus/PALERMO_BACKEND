@@ -14,18 +14,19 @@ export const appConfig = registerAs('app', () => ({
   publicUrl: process.env.PUBLIC_URL?.replace(/\/$/, '') || undefined,
   /**
    * URL del API en producción (Railway). Aparece como segundo servidor en Swagger.
-   * Ejemplo: https://befcobackend-production-de41.up.railway.app
+   * Ejemplo: https://palermobackend-production.up.railway.app
    */
   productionUrl: (
     process.env.PRODUCTION_URL ??
-    'https://befcobackend-production-de41.up.railway.app'
+    'https://palermobackend-production.up.railway.app'
   ).replace(/\/$/, ''),
 }));
 
 export const databaseConfig = registerAs('database', () => {
   const target = resolveDbTarget();
   const url = resolveDatabaseUrl(target);
-  const usingRailway = target === 'railway' || Boolean(url && isRemoteDatabaseUrl(url));
+  const usingRailway =
+    target === 'railway' || Boolean(url && isRemoteDatabaseUrl(url));
 
   return {
     /** local | railway — controla a qué Postgres se conecta el API en desarrollo. */
@@ -94,3 +95,23 @@ export const storageConfig = registerAs('storage', () => ({
   uploadsDir: process.env.UPLOADS_DIR ?? 'uploads',
   publicBasePath: '/uploads',
 }));
+
+/**
+ * Bucket S3 compatible (Railway). Las fotos de incidencias son privadas:
+ * en PostgreSQL solo se guarda la clave del objeto.
+ */
+export const s3Config = registerAs('s3', () => {
+  const urlStyle = (process.env.AWS_S3_URL_STYLE ?? 'virtual')
+    .trim()
+    .toLowerCase();
+
+  return {
+    endpoint: process.env.AWS_ENDPOINT_URL?.trim() || undefined,
+    bucket: process.env.AWS_S3_BUCKET_NAME?.trim() || undefined,
+    region: process.env.AWS_DEFAULT_REGION?.trim() || 'auto',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID?.trim() || undefined,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY?.trim() || undefined,
+    /** `virtual` (Railway por defecto) o `path` si AWS_S3_URL_STYLE=path. */
+    forcePathStyle: urlStyle === 'path',
+  };
+});

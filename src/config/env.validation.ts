@@ -1,7 +1,9 @@
 export function validateEnv(config: Record<string, unknown>) {
-  const rawTarget = String(config.DB_TARGET ?? '')
-    .trim()
-    .toLowerCase();
+  const rawTargetValue = config.DB_TARGET;
+  const rawTarget =
+    typeof rawTargetValue === 'string'
+      ? rawTargetValue.trim().toLowerCase()
+      : '';
   if (rawTarget && rawTarget !== 'local' && rawTarget !== 'railway') {
     throw new Error('DB_TARGET must be "local" or "railway"');
   }
@@ -9,7 +11,8 @@ export function validateEnv(config: Record<string, unknown>) {
   const target: 'local' | 'railway' =
     rawTarget === 'local' || rawTarget === 'railway'
       ? rawTarget
-      : typeof config.DATABASE_URL === 'string' && config.DATABASE_URL.length > 0
+      : typeof config.DATABASE_URL === 'string' &&
+          config.DATABASE_URL.length > 0
         ? 'railway'
         : 'local';
 
@@ -61,6 +64,13 @@ export function validateEnv(config: Record<string, unknown>) {
 
   if (typeof config.JWT_SECRET !== 'string' || config.JWT_SECRET.length < 16) {
     throw new Error('JWT_SECRET must be a string with at least 16 characters');
+  }
+
+  const urlStyleRaw = config.AWS_S3_URL_STYLE;
+  const urlStyle =
+    typeof urlStyleRaw === 'string' ? urlStyleRaw.trim().toLowerCase() : '';
+  if (urlStyle && urlStyle !== 'virtual' && urlStyle !== 'path') {
+    throw new Error('AWS_S3_URL_STYLE must be "virtual" or "path"');
   }
 
   return config;
