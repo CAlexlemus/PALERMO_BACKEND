@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import { Repository } from 'typeorm';
 import { EstadoAsistencia } from '../common/enums';
+import { relojMexico } from '../common/fecha-mexico';
 import { Obra, RegistroAsistencia, Rol, Usuario } from '../entities';
 import { StorageService } from '../storage/storage.service';
 import { CreateAsistenciaDto } from './dto/create-asistencia.dto';
@@ -114,8 +115,10 @@ export class AsistenciasService {
       usuarioId,
       obraId: createAsistenciaDto.obraId,
       tipoEvento: createAsistenciaDto.tipoEvento,
-      fechaHoraDispositivo: new Date(createAsistenciaDto.fechaHoraDispositivo),
-      fechaHoraServidor: new Date(),
+      fechaHoraDispositivo: relojMexico(
+        new Date(createAsistenciaDto.fechaHoraDispositivo),
+      ),
+      fechaHoraServidor: relojMexico(new Date()),
       esSincronizacionOffline:
         createAsistenciaDto.esSincronizacionOffline ?? false,
       ubicacion: createAsistenciaDto.ubicacion ?? null,

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { textoRelojMexico } from '../common/fecha-mexico';
 import { Obra, RegistroAsistencia, Usuario } from '../entities';
 import { ConsultarAsistenciasObraDto } from './dto/consultar-asistencias-obra.dto';
 import { CreateObraDto } from './dto/create-obra.dto';
@@ -67,14 +68,14 @@ export class ObrasService {
       .addSelect('o.radiometros', 'radioMetros')
       .addSelect('ST_AsGeoJSON(rg.ubicacion)::json', 'ubicacion')
       .addSelect('rg.tipoEvento', 'tipoevento')
-      .addSelect("TO_CHAR(rg.fechaHoraServidor, 'HH24:MI:SS')", 'hora')
+      .addSelect("TO_CHAR(rg.fechaHoraDispositivo, 'HH24:MI:SS')", 'hora')
       .addSelect('rg.fechaHoraDispositivo', 'fechahoraservidor')
       .where('rg.obraId = :obraId', { obraId })
       .andWhere(
-        'rg.fechaHoraServidor BETWEEN :fechaInicio AND :fechaFin',
+        'rg.fechaHoraDispositivo BETWEEN :fechaInicio AND :fechaFin',
         { fechaInicio: inicio, fechaFin: fin },
       )
-      .orderBy('rg.fechaHoraServidor', 'ASC')
+      .orderBy('rg.fechaHoraDispositivo', 'ASC')
       .getRawMany();
   }
 
@@ -116,20 +117,23 @@ export class ObrasService {
     };
   }
 
-  /** Interpreta fecha o fecha-hora como inicio del rango (00:00 si es solo fecha). */
-  private parseFechaInicio(valor: string): Date {
+  /**
+   * Inicio del rango como reloj de Mexico, sin zona.
+   * Así se compara directo contra las columnas timestamp de asistencia.
+   */
+  private parseFechaInicio(valor: string): string {
     if (this.esSoloFecha(valor)) {
-      return new Date(`${valor}T00:00:00`);
+      return `${valor.trim()} 00:00:00.000`;
     }
-    return new Date(valor);
+    return textoRelojMexico(new Date(valor));
   }
 
-  /** Interpreta fecha o fecha-hora como fin del rango (23:59:59.999 si es solo fecha). */
-  private parseFechaFin(valor: string): Date {
+  /** Fin del rango como reloj de Mexico, sin zona. */
+  private parseFechaFin(valor: string): string {
     if (this.esSoloFecha(valor)) {
-      return new Date(`${valor}T23:59:59.999`);
+      return `${valor.trim()} 23:59:59.999`;
     }
-    return new Date(valor);
+    return textoRelojMexico(new Date(valor));
   }
 
   private esSoloFecha(valor: string): boolean {

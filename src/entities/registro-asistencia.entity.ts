@@ -23,15 +23,21 @@ export class RegistroAsistencia {
   @Column({ name: 'tipoevento', type: 'varchar', length: 15 })
   tipoEvento!: TipoEvento;
 
-  @ApiProperty({ example: '2024-05-15T07:55:00.000Z' })
+  @ApiProperty({
+    example: '2024-05-15T07:55:00.000',
+    description: 'Reloj de America/Mexico_City al tomar la asistencia',
+  })
   @Column({ name: 'fechahoradispositivo', type: 'timestamp' })
   fechaHoraDispositivo!: Date;
 
-  @ApiProperty({ example: '2024-05-15T07:55:10.000Z' })
+  @ApiProperty({
+    example: '2024-05-15T07:55:10.000',
+    description: 'Reloj de America/Mexico_City al recibir el registro',
+  })
   @Column({
     name: 'fechahoraservidor',
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
+    default: () => "(CURRENT_TIMESTAMP AT TIME ZONE 'America/Mexico_City')",
   })
   fechaHoraServidor!: Date;
 
